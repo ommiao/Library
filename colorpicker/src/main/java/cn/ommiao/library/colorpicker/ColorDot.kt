@@ -1,9 +1,8 @@
 package cn.ommiao.library.colorpicker
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector2D
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.TwoWayConverter
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.State
 import androidx.compose.ui.geometry.Offset
@@ -28,41 +27,11 @@ data class ColorDot(
         (offset - other).getDistanceSquared()
     }
 
-    private val animatableAlpha = Animatable(ALPHA_START)
     private val animatableOffset =
         Animatable(
             initialValue = initialOffset,
-            typeConverter = TwoWayConverter(
-                convertToVector = { AnimationVector2D(it.x, it.y) },
-                convertFromVector = { Offset(it.v1, it.v2) }
-            )
+            typeConverter = Offset.VectorConverter
         )
-
-    private var animating = false
-
-    fun getAlpha(): State<Float> {
-        return animatableAlpha.asState()
-    }
-
-    suspend fun startBlink() {
-        animating = true
-        alphaTo(ALPHA_END)
-    }
-
-    private suspend fun alphaTo(value: Float) {
-        animatableAlpha.animateTo(value, animationSpec = tween(600))
-        if (animating) {
-            alphaTo(if (value == ALPHA_END) ALPHA_START else ALPHA_END)
-        } else if (value != ALPHA_START) {
-            alphaTo(ALPHA_START)
-        }
-    }
-
-    fun isBlinking(): Boolean = animatableAlpha.isRunning
-
-    fun stopBlink() {
-        animating = false
-    }
 
     fun getOffset(): State<Offset> {
         return animatableOffset.asState()
@@ -92,10 +61,5 @@ data class ColorDot(
 
     override fun hashCode(): Int {
         return hsv.contentHashCode()
-    }
-
-    companion object {
-        private const val ALPHA_START = 1.0f
-        private const val ALPHA_END = 0f
     }
 }
