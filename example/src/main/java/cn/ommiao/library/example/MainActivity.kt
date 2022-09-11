@@ -78,16 +78,16 @@ private fun Content() {
                     )
                 }
             ) {
-                composable(route = Route.Homepage.route, contentZIndex = 0f) {
+                composable(route = Route.Homepage.route) {
                     HomepageScreen()
                 }
-                composable(route = Route.Theme.route, contentZIndex = 1f) {
+                composable(route = Route.Theme.route) {
                     ThemeScreen(theme = theme) { theme = it }
                 }
-                composable(route = Route.ColorPicker.route, contentZIndex = 1f) {
+                composable(route = Route.ColorPicker.route) {
                     ColorPickerScreen()
                 }
-                composable(route = Route.Overscroll.route, contentZIndex = 1f) {
+                composable(route = Route.Overscroll.route) {
                     OverscrollScreen()
                 }
             }

@@ -28,10 +28,13 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.with
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -163,13 +166,8 @@ public fun AnimatedNavHost(
     val backStackEntry = visibleEntries.lastOrNull()
 
     if (backStackEntry != null) {
-        var contentZIndex = 0f
         val finalEnter: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition = {
             val targetDestination = targetState.destination as AnimatedComposeNavigator.Destination
-
-            targetDestination.hierarchy.firstNotNullOfOrNull { destination ->
-                contentZIndex = contentZIndices[destination.route] ?: 0f
-            }
 
             if (composeNavigator.isPop.value) {
                 targetDestination.hierarchy.firstNotNullOfOrNull { destination ->
@@ -208,7 +206,7 @@ public fun AnimatedNavHost(
                 } else {
                     EnterTransition.None with ExitTransition.None
                 }.apply {
-                    targetContentZIndex = contentZIndex
+                    targetContentZIndex = navController.backQueue.size.toFloat()
                 }
             },
             contentAlignment,
@@ -261,6 +259,3 @@ internal val popEnterTransitions =
 @ExperimentalAnimationApi
 internal val popExitTransitions =
     mutableMapOf<String?, (AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?)?>()
-
-@ExperimentalAnimationApi
-internal val contentZIndices = mutableMapOf<String?, Float>()

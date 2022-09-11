@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import cn.ommiao.library.example.LocalNavHostController
 import cn.ommiao.library.example.data.MaterialColors
 import cn.ommiao.library.example.data.toColor
 import cn.ommiao.library.overscroll.OverscrollLazyColumn
@@ -117,6 +118,7 @@ private fun TopBar(
     statusBarHeight: Dp,
     topBarOffset: MutableState<Float>
 ) {
+    val navController = LocalNavHostController.current
     Card(
         backgroundColor = Color.White.copy(alpha = 0.88f),
         modifier = Modifier
@@ -125,14 +127,17 @@ private fun TopBar(
             .padding(16.dp)
             .height(56.dp)
             .offset { IntOffset(x = 0, y = topBarOffset.value.roundToInt()) },
-        shape = RoundedCornerShape(28.dp)
+        shape = RoundedCornerShape(28.dp),
+        onClick = {
+            navController.navigate("theme")
+        }
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Nothing to show",
+                text = "Navigate to theme",
                 style = MaterialTheme.typography.body1.copy(
                     fontFamily = montFamily
                 )

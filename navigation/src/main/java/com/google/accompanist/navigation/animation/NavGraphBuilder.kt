@@ -55,7 +55,6 @@ public fun NavGraphBuilder.composable(
     popExitTransition: (
         AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
     )? = exitTransition,
-    contentZIndex: Float = 0f,
     content: @Composable AnimatedVisibilityScope.(NavBackStackEntry) -> Unit
 ) {
     addDestination(
@@ -74,7 +73,6 @@ public fun NavGraphBuilder.composable(
             exitTransition?.let { exitTransitions[route] = exitTransition }
             popEnterTransition?.let { popEnterTransitions[route] = popEnterTransition }
             popExitTransition?.let { popExitTransitions[route] = popExitTransition }
-            contentZIndices[route] = contentZIndex
         }
     )
 }
@@ -109,7 +107,6 @@ public fun NavGraphBuilder.navigation(
     popExitTransition: (
         AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
     )? = exitTransition,
-    contentZIndex: Float = 0f,
     builder: NavGraphBuilder.() -> Unit
 ) {
     navigation(startDestination, route, arguments, deepLinks, builder).apply {
@@ -117,6 +114,5 @@ public fun NavGraphBuilder.navigation(
         exitTransition?.let { exitTransitions[route] = exitTransition }
         popEnterTransition?.let { popEnterTransitions[route] = popEnterTransition }
         popExitTransition?.let { popExitTransitions[route] = popExitTransition }
-        contentZIndices[route] = contentZIndex
     }
 }
