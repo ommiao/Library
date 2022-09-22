@@ -63,7 +63,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "cn.ommiao.library"
                 artifactId = "theme"
-                version = "1.0.0-alpha01"
+                version = "1.0.0-alpha02"
                 artifact(sourcesJar)
             }
         }
