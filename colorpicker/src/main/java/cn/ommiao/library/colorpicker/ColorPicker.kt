@@ -199,7 +199,7 @@ fun ColorPicker(
                         if (bloomingOrShrinking) return@clickInputModifier
                         scope.launch {
                             bloomingOrShrinking = true
-                            clipRadius.animateTo(wheelRadiusPx, tween(600))
+                            clipRadius.animateTo(wheelRadiusPx, lowSpring())
                         }
                         scope.launch {
                             pickerState = ColorPickerStateValue.PICK
@@ -217,7 +217,7 @@ fun ColorPicker(
                             }
                             scope.launch {
                                 activeDotRadius.animateTo(previewRadiusPx, lowSpring())
-                                clipRadius.animateTo(previewRadiusPx, tween(400))
+                                clipRadius.animateTo(previewRadiusPx, lowSpring())
                                 val preferredRotation =
                                     -activeColorDot.hsv[0].plus(alignment.getSelectedDotInitialRotation())
                                 wheelRotation.animateTo(preferredRotation)
@@ -323,35 +323,41 @@ private fun Modifier.dragInputModifier(
     wheelCenterOffset: Offset,
     onLightnessRotate: (Float) -> Unit,
     onPickerRotate: (Float) -> Unit
-): Modifier = pointerInput(state, alignment, wheelTranslateOffset) {
-    var pickerDragging = false
-    var lightnessDragging = false
-    detectDragGestures(
-        onDragEnd = {
-            pickerDragging = false
-            lightnessDragging = false
+): Modifier {
+    return if (state == ColorPickerStateValue.PICK) {
+        pointerInput(state, alignment, wheelTranslateOffset) {
+            var pickerDragging = false
+            var lightnessDragging = false
+            detectDragGestures(
+                onDragEnd = {
+                    pickerDragging = false
+                    lightnessDragging = false
+                }
+            ) { change, _ ->
+                val startPosition = change.previousPosition - wheelTranslateOffset
+                if (lightnessDragging || (
+                    startPosition.inCircle(
+                            wheelRadius / 2,
+                            center = Offset(wheelRadius, wheelRadius)
+                        ) && pickerDragging.not()
+                    )
+                ) {
+                    lightnessDragging = true
+                    onLightnessRotate.invoke(
+                        change.previousPosition.angle(wheelCenterOffset, change.position)
+                    )
+                    change.consume()
+                } else if (pickerDragging || (startPosition.inCircle(wheelRadius) && lightnessDragging.not())) {
+                    pickerDragging = true
+                    onPickerRotate.invoke(
+                        change.previousPosition.angle(wheelCenterOffset, change.position)
+                    )
+                    change.consume()
+                }
+            }
         }
-    ) { change, _ ->
-        val startPosition = change.previousPosition - wheelTranslateOffset
-        if (lightnessDragging || (
-            startPosition.inCircle(
-                    wheelRadius / 2,
-                    center = Offset(wheelRadius, wheelRadius)
-                ) && pickerDragging.not()
-            )
-        ) {
-            lightnessDragging = true
-            onLightnessRotate.invoke(
-                change.previousPosition.angle(wheelCenterOffset, change.position)
-            )
-            change.consume()
-        } else if (pickerDragging || (startPosition.inCircle(wheelRadius) && lightnessDragging.not())) {
-            pickerDragging = true
-            onPickerRotate.invoke(
-                change.previousPosition.angle(wheelCenterOffset, change.position)
-            )
-            change.consume()
-        }
+    } else {
+        this
     }
 }
 
