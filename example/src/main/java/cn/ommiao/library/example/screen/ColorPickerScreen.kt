@@ -86,7 +86,7 @@ fun ColorPickerScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Appearance.colors.backgroundPrimaryBase)
+            .background(Appearance.colors.backgroundSecondaryBase)
     ) {
         val colorPickerState = rememberColorPackerState()
         val items = remember {

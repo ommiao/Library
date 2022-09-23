@@ -63,7 +63,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "cn.ommiao.library"
                 artifactId = "color-picker"
-                version = "1.0.0-alpha04"
+                version = "1.0.0-alpha05"
                 artifact(sourcesJar)
             }
         }
