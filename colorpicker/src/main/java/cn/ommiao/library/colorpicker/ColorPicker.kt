@@ -2,6 +2,7 @@ package cn.ommiao.library.colorpicker
 
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.spring
@@ -74,7 +75,7 @@ fun ColorPicker(
             alignment.getCanvasRadius(size, centerPadding, canvasPadding, previewRadius)
         val wheelSizePx = with(LocalDensity.current) { (wheelRadiusDp * 2).toPx() }
         val wheelRadiusPx = wheelSizePx / 2
-        val colorDots = rememberColorDots(pickerState, wheelSizePx)
+        val colorDots = rememberColorDots(wheelSizePx)
         val wheelDefaultCenterOffset = DpOffset(wheelRadiusDp, wheelRadiusDp).toOffset()
         var activeColorDot by remember {
             mutableStateOf(colorDots.first { it == initialColorDot })
@@ -113,21 +114,31 @@ fun ColorPicker(
                 )
             }
         }
-        if (pickerState == ColorPickerStateValue.PICK) {
-            colorDots.forEachIndexed { index, dot ->
-                LaunchedEffect(pickerState) {
-                    dot.startOffset()
-                    if (index == colorDots.lastIndex) {
-                        val active = colorDots.first { it == initialColorDot }
-                        launch {
-                            activeDotOffset.animateTo(
-                                active.offset,
-                                lowSpring()
+        LaunchedEffect(pickerState) {
+            if (pickerState == ColorPickerStateValue.PICK) {
+                ColorDot.Animatables.values.forEach { it.snapTo(0f) }
+                repeat(DENSITY) { index ->
+                    launch {
+                        ColorDot.Animatables[index]?.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(
+                                600,
+                                delayMillis = (DENSITY - index - 1) * 30,
+                                easing = LinearOutSlowInEasing
                             )
-                            bloomingOrShrinking = false
-                        }
-                        launch {
-                            activeDotRadius.animateTo(active.radius, lowSpring())
+                        )
+                        if (index == DENSITY - 1) {
+                            val active = colorDots.first { it == initialColorDot }
+                            launch {
+                                activeDotOffset.animateTo(
+                                    active.offset,
+                                    lowSpring()
+                                )
+                                bloomingOrShrinking = false
+                            }
+                            launch {
+                                activeDotRadius.animateTo(active.radius, lowSpring())
+                            }
                         }
                     }
                 }
@@ -149,6 +160,9 @@ fun ColorPicker(
             Box(
                 Modifier.fillMaxSize()
                     .clickable {
+                        if (bloomingOrShrinking) {
+                            return@clickable
+                        }
                         scope.launch {
                             scope.launch {
                                 bloomingOrShrinking = true
@@ -388,14 +402,16 @@ private fun DrawScope.drawColorDots(
                     drawCircle(
                         color = it.lightnessColor(lightness),
                         radius = it.radius,
-                        center = it.getOffset().value
+                        center = it.getOffset(
+                            ColorDot.Animatables[it.layer]?.asState()?.value ?: 0f
+                        )
                     )
                 }
                 colorDots[0].let {
                     drawCircle(
                         color = Color.LightGray,
                         radius = it.radius,
-                        center = it.getOffset().value,
+                        center = it.initialOffset,
                         style = Stroke(width = it.radius * 0.1f)
                     )
                 }
@@ -449,12 +465,9 @@ fun rememberColorPackerState(): MutableState<ColorPickerStateValue> {
 }
 
 @Composable
-private fun rememberColorDots(
-    pickerState: ColorPickerStateValue,
-    wheelSize: Float
-): List<ColorDot> {
+private fun rememberColorDots(wheelSize: Float): List<ColorDot> {
     val density = DENSITY
-    val dots = remember(wheelSize) {
+    return remember(wheelSize) {
         mutableListOf<ColorDot>().apply {
             val half = wheelSize / 2
             val strokeWidth = STROKE_RATIO * (1f + GAP_PERCENTAGE)
@@ -491,9 +504,6 @@ private fun rememberColorDots(
                 }
             }
         }.toList()
-    }
-    return remember(pickerState) {
-        dots.map { it.copy() }
     }
 }
 

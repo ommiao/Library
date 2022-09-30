@@ -1,10 +1,8 @@
 package cn.ommiao.library.colorpicker
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.tween
-import androidx.compose.runtime.State
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 
@@ -15,6 +13,7 @@ data class ColorDot(
     val hsv: Array<Float>,
     val layer: Int = 0
 ) {
+    val diffOffset = offset - initialOffset
 
     val color: Color
         get() = Color.hsv(hsv[0], hsv[1], hsv[2])
@@ -27,25 +26,8 @@ data class ColorDot(
         (offset - other).getDistanceSquared()
     }
 
-    private val animatableOffset =
-        Animatable(
-            initialValue = initialOffset,
-            typeConverter = Offset.VectorConverter
-        )
-
-    fun getOffset(): State<Offset> {
-        return animatableOffset.asState()
-    }
-
-    suspend fun startOffset() {
-        animatableOffset.animateTo(
-            targetValue = offset,
-            animationSpec = tween(
-                600,
-                delayMillis = (DENSITY - layer - 1) * 30,
-                easing = LinearOutSlowInEasing
-            )
-        )
+    fun getOffset(progress: Float): Offset {
+        return diffOffset * progress + initialOffset
     }
 
     override fun equals(other: Any?): Boolean {
@@ -61,5 +43,19 @@ data class ColorDot(
 
     override fun hashCode(): Int {
         return hsv.contentHashCode()
+    }
+
+    companion object {
+        val Animatables = mutableMapOf<Int, Animatable<Float, AnimationVector1D>>().apply {
+            repeat(DENSITY) {
+                put(
+                    it,
+                    Animatable(
+                        initialValue = 0f,
+                        typeConverter = Float.VectorConverter
+                    )
+                )
+            }
+        }
     }
 }
