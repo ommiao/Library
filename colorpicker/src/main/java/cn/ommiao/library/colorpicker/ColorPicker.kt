@@ -1,5 +1,6 @@
 package cn.ommiao.library.colorpicker
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -117,13 +118,14 @@ fun ColorPicker(
         LaunchedEffect(pickerState) {
             if (pickerState == ColorPickerStateValue.PICK) {
                 ColorDot.Animatables.values.forEach { it.snapTo(0f) }
+                val delayUnit = BLOOM_DURATION / 20
                 repeat(DENSITY) { index ->
                     launch {
                         ColorDot.Animatables[index]?.animateTo(
                             targetValue = 1f,
                             animationSpec = tween(
-                                600,
-                                delayMillis = (DENSITY - index - 1) * 30,
+                                BLOOM_DURATION,
+                                delayMillis = (DENSITY - index - 1) * delayUnit,
                                 easing = LinearOutSlowInEasing
                             )
                         )
@@ -157,39 +159,40 @@ fun ColorPicker(
         }
         val scope = rememberCoroutineScope()
         if (pickerState == ColorPickerStateValue.PICK) {
-            Box(
-                Modifier.fillMaxSize()
-                    .clickable {
-                        if (bloomingOrShrinking) {
-                            return@clickable
+            val onCancel = {
+                if (bloomingOrShrinking.not()) {
+                    scope.launch {
+                        scope.launch {
+                            bloomingOrShrinking = true
+                            activeDotOffset.animateTo(
+                                Offset(wheelRadiusPx, wheelRadiusPx),
+                                lowSpring()
+                            )
                         }
                         scope.launch {
-                            scope.launch {
-                                bloomingOrShrinking = true
-                                activeDotOffset.animateTo(
-                                    Offset(wheelRadiusPx, wheelRadiusPx),
-                                    lowSpring()
-                                )
-                            }
-                            scope.launch {
-                                activeDotColor.animateTo(
-                                    initialColorDot.lightnessColor(initialLightness),
-                                    lowSpring()
-                                )
-                            }
-                            scope.launch {
-                                activeDotRadius.animateTo(previewRadiusPx, lowSpring())
-                                clipRadius.animateTo(previewRadiusPx, tween(400))
-                                val preferredRotation =
-                                    -initialColorDot.hsv[0].plus(alignment.getSelectedDotInitialRotation())
-                                wheelRotation.animateTo(preferredRotation)
-                                activeColorDot = colorDots.first { it == initialColorDot }
-                                lightness.snapTo(initialLightness)
-                                pickerState = ColorPickerStateValue.PREVIEW
-                                bloomingOrShrinking = false
-                            }
+                            activeDotColor.animateTo(
+                                initialColorDot.lightnessColor(initialLightness),
+                                lowSpring()
+                            )
+                        }
+                        scope.launch {
+                            activeDotRadius.animateTo(previewRadiusPx, lowSpring())
+                            clipRadius.animateTo(previewRadiusPx, lowSpring())
+                            val preferredRotation =
+                                -initialColorDot.hsv[0].plus(alignment.getSelectedDotInitialRotation())
+                            wheelRotation.animateTo(preferredRotation)
+                            activeColorDot = colorDots.first { it == initialColorDot }
+                            lightness.snapTo(initialLightness)
+                            pickerState = ColorPickerStateValue.PREVIEW
+                            bloomingOrShrinking = false
                         }
                     }
+                }
+            }
+            BackHandler(onBack = onCancel)
+            Box(
+                Modifier.fillMaxSize()
+                    .clickable(onClick = onCancel)
             )
         }
         Canvas(
@@ -205,7 +208,6 @@ fun ColorPicker(
                     pickerState,
                     alignment,
                     wheelRadiusPx,
-                    previewRadiusPx,
                     wheelTranslateOffset,
                     wheelDefaultCenterOffset,
                     wheelRotation.asState(),
@@ -302,7 +304,6 @@ private fun Modifier.clickInputModifier(
     state: ColorPickerStateValue,
     alignment: ColorPickerAlignment,
     wheelRadius: Float,
-    previewRadius: Float,
     wheelTranslateOffset: Offset,
     wheelDefaultCenterOffset: Offset,
     wheelRotation: State<Float>,
@@ -319,11 +320,7 @@ private fun Modifier.clickInputModifier(
             if (state == ColorPickerStateValue.PICK && pickerOffsetRotated.inCircle(wheelRadius)) {
                 val nearestDot = colorDots.findNearest(pickerOffsetRotated)
                 onDotClicked.invoke(nearestDot)
-            } else if (state == ColorPickerStateValue.PREVIEW && pickerOffsetRotated.inCircle(
-                    previewRadius,
-                    Offset(wheelRadius, wheelRadius)
-                )
-            ) {
+            } else if (state == ColorPickerStateValue.PREVIEW) {
                 onPreviewClicked.invoke()
             }
         }
@@ -525,3 +522,5 @@ internal const val DENSITY = 12
 private const val SIZE_JITTER = 1.2f
 private const val STROKE_RATIO = 1.5f
 private const val GAP_PERCENTAGE = 0.025f
+
+private const val BLOOM_DURATION = 750

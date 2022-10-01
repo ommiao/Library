@@ -43,6 +43,7 @@ dependencies {
     with(Libs) {
         api(composeUi)
         api(composeMaterial)
+        api(composeActivity)
         api(accompanistSystemUi)
     }
 }
@@ -63,7 +64,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "cn.ommiao.library"
                 artifactId = "color-picker"
-                version = "1.0.0-alpha06"
+                version = "1.0.0-alpha07"
                 artifact(sourcesJar)
             }
         }
