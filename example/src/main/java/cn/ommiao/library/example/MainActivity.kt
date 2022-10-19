@@ -19,6 +19,7 @@ import cn.ommiao.library.example.screen.ColorPickerScreen
 import cn.ommiao.library.example.screen.HomepageScreen
 import cn.ommiao.library.example.screen.OverscrollScreen
 import cn.ommiao.library.example.screen.Route
+import cn.ommiao.library.example.screen.SameItemWidthRowScreen
 import cn.ommiao.library.example.screen.ThemeScreen
 import cn.ommiao.library.theme.Appearance
 import cn.ommiao.library.theme.Theme
@@ -89,6 +90,9 @@ private fun Content() {
                 }
                 composable(route = Route.Overscroll.route) {
                     OverscrollScreen()
+                }
+                composable(route = Route.SameItemWidthRow.route) {
+                    SameItemWidthRowScreen()
                 }
             }
         }

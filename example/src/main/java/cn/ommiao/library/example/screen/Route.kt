@@ -12,6 +12,8 @@ sealed class Route(val route: String) {
 
     object Overscroll : Route("overscroll")
 
+    object SameItemWidthRow : Route("same-width-item-row")
+
     fun navigate(navHostController: NavHostController) {
         navHostController.navigate(route)
     }
