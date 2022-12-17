@@ -8,10 +8,10 @@ object Versions {
     const val compileSdk = 33
     const val minSdk = 23
     const val targetSdk = 33
-    const val compose = "1.3.0-beta03"
+    const val compose = "1.3.1"
     const val composeCompiler = "1.3.1"
-    const val accompanist = "0.26.4-beta"
-    const val composeNavigation = "2.5.2"
+    const val accompanist = "0.28.0"
+    const val composeNavigation = "2.5.3"
 }
 
 object Libs {
